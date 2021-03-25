@@ -10,6 +10,7 @@ char* entrada(){
             saida[i*12]=0;
             saida[i*12+11]=0;
             scanf("%c %c %c %c %c %c %c %c %c %c",saida[i*12+1],saida[i*12+2],saida[i*12+3],saida[i*124],saida[i*12+5],saida[i*12+6],saida[i*12+7],saida[i*12+8],saida[i*12+9],saida[i*12+10]);
+        }
         else{
             for(int j=0;j<12;j++){
                 saida[i*12+j]=0;
@@ -24,9 +25,17 @@ char* entrada(){
 }
 void saida(char* entrada){
     printf("+++++++++++++++++++++++\n");
-    for(int i=1;i<11,i){
-        printf("+ %");
+    for(int i=1;i<11;i++){
+        printf("+ ");
+        for(int j=1;j<11;i++){
+            if(entrada[i*12+j]==0)
+                printf("  ");
+            else 
+                printf("@ ");
+        }
+        printf("+\n");
     }
     printf("+++++++++++++++++++++++\n");
     
 }
+
