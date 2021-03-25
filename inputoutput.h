@@ -1,4 +1,4 @@
 #include <stdio.h>
 #include <stdlib.h>
-char** entrada();
+char* entrada();
 void saida(char** matriz);
