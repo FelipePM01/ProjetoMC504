@@ -2,9 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "inputoutput.h"
 
-#define N_THR = 10
+#define N_THR 10
 
 void* f_thread(void *v) {
   int id = (int) v;
@@ -20,6 +19,5 @@ int main(){
             pthread_create(&thr[i][j], NULL, f_thread, (void*) i);
         }
     }
-    pthread_t thr[N_THR];
     printf("Hello World!");
 }
