@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define N_THR 10
+#define N_THR 20
 
 typedef struct {
     int* matrix;
@@ -59,6 +59,8 @@ void *regra(void* arg)
 }
 
 int main(){
+    const char outarray[2] = {'-','@'};
+
     pthread_t thr[N_THR][N_THR];
     Args args[N_THR][N_THR];
 
@@ -100,15 +102,15 @@ int main(){
         }
         for (int i = 1; i < N_THR+1; i++){
             for (int j = 1; j < N_THR+1;j++){
-                printf("%d", p2[i*(N_THR+2)+j]);
+                printf("%c ", outarray[p2[i*(N_THR+2)+j]]);
             }
             printf("\n");
         }
-        printf("\n");
+        printf("\n\n");
         int* temp = p1;
         p1 = p2;
         p2 = temp;
-        sleep(1);
+        usleep(200*1000);
     }
 
 
