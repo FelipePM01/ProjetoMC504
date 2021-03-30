@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include "inputoutput.h"
 #define N_THR 20
 
 typedef struct {
@@ -75,11 +75,7 @@ int main(){
             mat2[i*(N_THR+2)+j] = 0;
         }
     }
-    mat[1*(N_THR+2)+3] = 1;
-    mat[2*(N_THR+2)+1] = 1;
-    mat[2*(N_THR+2)+3] = 1;
-    mat[3*(N_THR+2)+2] = 1;
-    mat[3*(N_THR+2)+3] = 1;
+    entrada(mat,N_THR);
     int* p1 = mat;
     int* p2 = mat2;
     while(1)

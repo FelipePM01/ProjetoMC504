@@ -1,4 +1,4 @@
 #include <stdio.h>
 #include <stdlib.h>
-char* entrada();
+void entrada(int* matriz, int n);
 void saida(char* vetor);
