@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "inputoutput.h"
-#define N_THR 20
+
+#define N_THR 3
 
 typedef struct {
     int* matrix;
@@ -11,7 +11,26 @@ typedef struct {
     int i;
     int j;
 } Args;
+void entrada(int* saida,int n){
+    
+    
+    for(int i=0;i<n;i++){
+        
+        if((i<(n-1))&&i>0){
 
+           
+            for(int j=1;j<n-2;j++){
+                scanf("%d ",saida+(i*n+j)*sizeof(int));
+            }
+            scanf("%d\n",saida+(i*n+n-2)*sizeof(int));
+        }
+    
+       
+    }
+    
+    
+    
+}
 void *regra(void* arg)
 {
     Args valores = *(Args*) arg;
