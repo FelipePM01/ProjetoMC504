@@ -20,13 +20,16 @@ void entrada(int* saida,int n){
 
            
             for(int j=1;j<n-2;j++){
-                scanf("%d ",saida+(i*n+j)*sizeof(int));
+                scanf("%d ",&saida[i*n+j]);
             }
-            scanf("%d\n",saida+(i*n+n-2)*sizeof(int));
+            scanf("%d\n",&saida[i*n+n-2]);
         }
     
        
     }
+    for(int i=0;i<25;i++)
+        printf("%d ",saida[i]);
+    printf("\n");
     
     
     
