@@ -75,7 +75,7 @@ int main(){
             mat2[i*(N_THR+2)+j] = 0;
         }
     }
-    entrada(mat,N_THR);
+    entrada(mat,N_THR+2);
     int* p1 = mat;
     int* p2 = mat2;
     while(1)

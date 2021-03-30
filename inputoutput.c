@@ -11,7 +11,7 @@ void entrada(int* saida,int n){
             for(int j=1;j<n-2;j++){
                 scanf("%d ",saida[i*n+j]);
             }
-            scanf("%d",saida[i*n+n-2]);
+            scanf("%d\n",saida[i*n+n-2]);
         }
        
     }
