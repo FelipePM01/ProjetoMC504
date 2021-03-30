@@ -128,7 +128,7 @@ int main(){
         int* temp = p1;
         p1 = p2;
         p2 = temp;
-        usleep(200*1000);
+        usleep(200*4000);
     }
 
 
