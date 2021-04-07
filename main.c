@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define N_THR 20
+#define N_THR 16
 
 typedef struct {
     int* matrix;
