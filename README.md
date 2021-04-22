@@ -1,7 +1,7 @@
 # ProjetoMC504
 Projeto para a disciplina MC504 da Unicamp
 
-a entrada é feita a partir de números 1 e 0 em que o 1 representa que a célula está viva e 0 que a célula está morta.O tamanho da matriz é 20x20 portanto devem ser inseridas 20 linhas com 20 numeros cada.
+a entrada é feita a partir de números 1 e 0 em que o 1 representa que a célula está viva e 0 que a célula está morta.O tamanho da matriz é 16x16 portanto devem ser inseridas 16 linhas com 16 numeros cada.
 
 Exemplos de entrada:
 
