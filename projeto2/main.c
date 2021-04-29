@@ -61,6 +61,9 @@ int f_cozinheiro(int* working , int* tarefa,sem_t* panelas,sem_t* facas,sem_t co
 void cozinhar(){
     usleep(2000);
 }
+void cortar(){
+    usleep(2000);
+}
 void entregar(){//
 
 }
