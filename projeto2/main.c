@@ -10,7 +10,7 @@ sem_t panelas;
 sem_t facas;
 sem_t cozinheiros;
 sem_t armazem;
-sem_t nova_tarefa;
+
 int f_cozinheiro(int* working , int* tarefa,sem_t* panelas,sem_t* facas,sem_t cozinheiros){ //working=variavel q guarda se acabou o programa ou nao
     while(working){
         //pegar tarefa
@@ -51,6 +51,7 @@ int f_cozinheiro(int* working , int* tarefa,sem_t* panelas,sem_t* facas,sem_t co
             sem_pos(armazem);
             sem_pos(cozinheiros);
         }
+        
         else{
            //dormir ate ter tarefa 
         }
@@ -61,5 +62,18 @@ void cozinhar(){
     usleep(2000);
 }
 void entregar(){//
+
+}
+
+int main(){
+    sem_init(&panelas,0,N_PANELAS);
+    sem_init(&cozinheiros,0,N_COZINHEIROS);
+    sem_init(&facas,0,N_FACAS);
+    sem_init(&armazem,0,1);
+
+    int camarao[1]={1};
+    int sushi[2]={0,2};//arroz=0,camarao=1,peixe=2
+
+    return 0;
 
 }
