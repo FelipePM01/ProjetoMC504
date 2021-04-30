@@ -6,6 +6,9 @@
 #define N_COZINHEIROS 2
 #define N_FACAS 1
 #define N_PANELAS 1
+#define N_CAMARAO 10
+#define N_ARROZ 10
+#define N_PEIXE 10
 typedef struct tarefas{
     int* vetor;
     int ini;
@@ -95,10 +98,14 @@ int main(){
     int camarao[1]={1};
     int sushi[2]={0,2};//arroz=0,camarao=1,peixe=2
     int* receitas[2]={camarao,sushi};
+    int disponiveis[2]={1,1};
+    while(disponiveis[0] || disponiveis[1]){
+        sem_wait(tarefa->acesso);
+        
 
-    int tarefas[9];
-    volatile int ini_tarefa=0;
-    volatile int fim_tarefa=0;
+    }
+
+    
     srand(time(NULL));
     return 0;
 
