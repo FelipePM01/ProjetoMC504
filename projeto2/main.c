@@ -7,14 +7,14 @@
 #define N_FACAS 1
 #define N_PANELAS 1
 typedef struct tarefas{
-    int vetor[9];
+    int* vetor;
     int ini;
     int fim;
     sem_t* acesso;
     sem_t* tarefas_disponiveis;
 } Tarefas;
 
-int f_cozinheiro(int* working , int* tarefa,sem_t* panelas,sem_t* facas,sem_t* cozinheiros,sem_t* armazem,Tarefas* tarefa){ //working=variavel q guarda se acabou o programa ou nao
+int f_cozinheiro(int* working , sem_t* panelas,sem_t* facas,sem_t* cozinheiros,sem_t* armazem,Tarefas* tarefa){ //working=variavel q guarda se acabou o programa ou nao
     while(working){
         //pegar tarefa
         if(tarefa==0){//cozinhar arroz
@@ -81,7 +81,7 @@ int main(){
     tarefa->fim=0;
     tarefa->acesso=malloc(sizeof(sem_t));
     tarefa->tarefas_disponiveis=malloc(sizeof(sem_t));
-
+    tarefa->vetor=malloc(9*sizeof(int));
 
 
     sem_init(&panelas,0,N_PANELAS);
