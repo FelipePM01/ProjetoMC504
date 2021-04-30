@@ -9,15 +9,19 @@
 #define N_CAMARAO 10
 #define N_ARROZ 10
 #define N_PEIXE 10
-typedef struct tarefas{
-    int* vetor;
-    int ini;
-    int fim;
-    sem_t* acesso;
-    sem_t* tarefas_disponiveis;
-} Tarefas;
 
-int f_cozinheiro(int* working , sem_t* panelas,sem_t* facas,sem_t* cozinheiros,sem_t* armazem,Tarefas* tarefa){ //working=variavel q guarda se acabou o programa ou nao
+typedef struct tarefa{
+    int tipo;
+    struct tarefa* prox;
+} Tarefa
+
+typedef struct grupo_tarefas{
+    Tarefa primeira;
+    sem_t* acesso;
+    sem_t* possui_tarefas;
+} GrupoTarefas;
+
+int f_cozinheiro(int* working, sem_t* panelas,sem_t* facas,sem_t* cozinheiros, sem_t* armazem, GrupoTarefas* tarefas){ //working=variavel q guarda se acabou o programa ou nao
     while(working){
         //pegar tarefa
         if(tarefa==0){//cozinhar arroz
@@ -59,7 +63,8 @@ int f_cozinheiro(int* working , sem_t* panelas,sem_t* facas,sem_t* cozinheiros,s
         }
         
         else{
-           //dormir ate ter tarefa 
+           //dormir ate ter tarefa
+           usleep(500);
         }
     }
 }
@@ -79,12 +84,9 @@ int main(){
     sem_t facas;
     sem_t cozinheiros;
     sem_t armazem;
-    Tarefas  *tarefa=malloc(sizeof(Tarefas));
-    tarefa->ini=0;
-    tarefa->fim=0;
+    GrupoTarefas *tarefas=malloc(sizeof(GrupoTarefas));
     tarefa->acesso=malloc(sizeof(sem_t));
-    tarefa->tarefas_disponiveis=malloc(sizeof(sem_t));
-    tarefa->vetor=malloc(9*sizeof(int));
+    tarefa->possui_tarefas=malloc(sizeof(sem_t));
 
 
     sem_init(&panelas,0,N_PANELAS);
@@ -92,7 +94,7 @@ int main(){
     sem_init(&facas,0,N_FACAS);
     sem_init(&armazem,0,1);
     sem_init(tarefa->acesso,0,1);
-    sem_init(tarefa->tarefas_disponiveis,0,0);
+    sem_init(tarefa->possui_tarefas,0,0);
     
 
     int camarao[1]={1};
@@ -111,7 +113,7 @@ int main(){
 
 }
 
-void adicionar_receitas(int* receitas,int n,Tarefas* tarefa){
+void adicionar_receitas(int* receitas,int n,GrupoTarefas* tarefa){
     int r =rand();
     sem_wait(tarefa->acesso);
 
