@@ -102,8 +102,7 @@ int main(){
     int* receitas[2]={camarao,sushi};
     int disponiveis[2]={1,1};
     while(disponiveis[0] || disponiveis[1]){
-        sem_wait(tarefa->acesso);
-        
+        sem_trywait(&cozinheiros);
 
     }
 
