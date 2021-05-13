@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdbool.h>
 
 #define N_COZINHEIROS 2
 #define N_FACAS 1
@@ -9,6 +10,7 @@
 #define N_CAMARAO 10
 #define N_ARROZ 10
 #define N_PEIXE 10
+
 typedef struct armazem{
     int* ingredientes;
     int* prontos;
@@ -19,7 +21,7 @@ typedef struct armazem{
 typedef struct tarefa{
     int tipo;
     struct tarefa* prox;
-} Tarefa
+} Tarefa;
 
 typedef struct grupo_tarefas{
     Tarefa* primeira;
@@ -27,7 +29,7 @@ typedef struct grupo_tarefas{
     sem_t* possui_tarefas;
 } GrupoTarefas;
 
-int f_cozinheiro(int* working, sem_t* panelas,sem_t* facas,sem_t* cozinheiros, Armazem* armazem, GrupoTarefas* tarefas,sem_t* checagem){ //working=variavel q guarda se acabou o programa ou nao
+int f_cozinheiro(int* working, sem_t* panelas,sem_t* facas,sem_t* cozinheiros, Armazem* armazem, GrupoTarefas* tarefas, sem_t* checagem){ //working=variavel q guarda se acabou o programa ou nao
     int tarefa_atual;
     while(working){
         sem_wait(tarefas->possui_tarefas)
@@ -44,7 +46,7 @@ int f_cozinheiro(int* working, sem_t* panelas,sem_t* facas,sem_t* cozinheiros, A
             sem_wait(panelas);
             cortar(tarefa);
             sem_pos(panelas);            
-            entregar(armzem,tarefa_atua;,checagem);            
+            entregar(armazem,tarefa_atual,checagem);            
             
         }
         else if(tarefa_atual==1){//cortar camarao
@@ -52,7 +54,7 @@ int f_cozinheiro(int* working, sem_t* panelas,sem_t* facas,sem_t* cozinheiros, A
             sem_wait(facas);
             cortar(tarefa);
             sem_pos(facas);
-            entregar(armzem,tarefa_atua;,checagem);
+            entregar(armazem,tarefa_atual,checagem);
             
 
         }
@@ -61,10 +63,9 @@ int f_cozinheiro(int* working, sem_t* panelas,sem_t* facas,sem_t* cozinheiros, A
             sem_wait(facas);
             cortar(tarefa);
             sem_pos(facas);
-            entregar(armzem,tarefa_atua;,checagem);
+            entregar(armazem,tarefa_atual,checagem);
             
         }
-        
         
     }
 }
@@ -81,13 +82,32 @@ void entregar(Armazem* armazem,int resultado,sem_t* checagem){//
     sem_pos(armazem->acesso);
     sem_pos(checagem);
 }
-void pegar(Armazem* armazem,int ingrediente){//
+
+void pegar_ingrediente(Armazem* armazem,int ingrediente){//
     sem_wait(armazem->acesso);
     (armazem->ingredientes)[ingrediente]--;
     (armazem->reservado)[ingrediente]--;
     sem_pos(armazem->acesso);
     
 }
+
+void pegar_receita_pronta(Armazem* armazem, int receita){
+    sem_wait(armazem->acesso);
+    armazem->prontos[receita] = armazem->prontos[receita] - 1;
+    sem_pos(armazem->acesso);
+}
+
+bool tem_receita_pronta(Armazem* armazem, int receita){
+    sem_wait(armazem->acesso);
+    if (armazem->prontos[receita]) > 0){
+        sem_pos(armazem->acesso);
+        return true;
+    }else{
+        sem_pos(armazem->acesso);
+        return false;
+    }
+}
+
 
 int main(){
     sem_t panelas;
@@ -109,15 +129,12 @@ int main(){
     tarefa->acesso=malloc(sizeof(sem_t));
     tarefa->possui_tarefas=malloc(sizeof(sem_t));
 
-
-
     sem_init(&panelas,0,N_PANELAS);
     sem_init(&checagem,0,0);
     sem_init(&facas,0,N_FACAS);
     sem_init(&armazem,0,1);
     sem_init(tarefa->acesso,0,1);
     sem_init(tarefa->possui_tarefas,0,0);
-    
 
     int camarao[1]={1};
     int sushi[2]={0,2};//arroz=0,camarao=1,peixe=2
@@ -128,7 +145,6 @@ int main(){
 
     }
 
-    
     srand(time(NULL));
     return 0;
 
@@ -137,7 +153,5 @@ int main(){
 void adicionar_receitas(int* receitas,int n,GrupoTarefas* tarefa){
     int r =rand();
     sem_wait(tarefa->acesso);
-
-
 
 }
