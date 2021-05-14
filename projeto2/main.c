@@ -244,22 +244,101 @@ void adicionar_receitas(Receita* receita,Armazem* armazem,int n,GrupoTarefas* ta
     
     
     Tarefa** vetor=malloc(receita->n*sizeof(Tarefa*));
-    for(int i=0;i<receita_a_adicionar->n;i++){
+    int checador=1;
+    for(int i=0;i<receita->n;i++){
         int id_tarefa=receita->etapas[i];
         vetor[i]=malloc(sizeof(Tarefa));
         vetor[i]->tipo=id_tarefa;
-        if(id_tarefa)
+        int ingredientes[1];
+        int tamanho;
+        if(id_tarefa==0){
+
+        
+            ingredientes[0]=0;//arroz
+            tamanho=1;
+        }
+        else if(id_tarefa==1){
+            ingredientes[0]=1;//camarao
+            tamanho=1;
+        }
+        else if(id_tarefa==2){
+            ingredientes[0]=2;
+            tamanho=1;
+        }
+        checador*=checar_ingrediente(armazem,&ingredientes,tamanho);
+    }
+    if(checador){
+        for(int i=0;i<receita->n-1;i++){
+            vetor[i]->proximo=vetor[i+1];
+            int id_tarefa=vetor[i]->tipo;
+            int ingredientes[1];
+            int tamanho;
+            if(id_tarefa==0){
+
+            
+                ingredientes[0]=0;//arroz
+                tamanho=1;
+            }
+            else if(id_tarefa==1){
+                ingredientes[0]=1;//camarao
+                tamanho=1;
+            }
+            else if(id_tarefa==2){
+                ingredientes[0]=2;
+                tamanho=1;
+            }
+            reservar_ingrediente(armazem,&ingredientes,tamanho);
+        }
+        int id_tarefa=vetor[receita->n-1]->tipo;
+        int ingredientes[1];
+        int tamanho;
+        if(id_tarefa==0){
+
+        
+            ingredientes[0]=0;//arroz
+            tamanho=1;
+        }
+        else if(id_tarefa==1){
+            ingredientes[0]=1;//camarao
+            tamanho=1;
+        }
+        else if(id_tarefa==2){
+            ingredientes[0]=2;//peixe
+            tamanho=1;
+        }
+        reservar_ingrediente(armazem,&ingredientes,tamanho);
+        vetor[receita->n-1]->proximo=NULL;
+        tarefa->ultima=vetor[receita->n-1];
+        if(tarefa->primeira==NULL)
+            tarefa->primeira=vetor[receita->n-1];
+        
+    }
+    else{
+        for(int i=0;i<receita->n-1;i++){
+            free(vetor[i]);
+        }
     }
     
 
 
 }
 
-int checar_ingrediente(Armazem* armazem,int* ingredientes,int n){
+int checar_ingrediente(Armazem* armazem,int** ingredientes,int n){
     int tem=1;
     sem_wait(armazem->acesso);
     for(int i=0;i<n;i++){
-        if()
+        if(armazem->ingredientes[*ingredientes[i]]-armazem->reservados[*ingredientes[i]]<=0)
+            tem=0;
     }
-    
+    sem_post(armazem->acesso)
+    return tem;
+}
+
+void reservar_ingredientes(Armazem* armazem,int** ingredientes,int n){
+    sem_wait(armazem->acesso);
+    for(int i=0;i<n;i++){
+        armazem->reservados[*ingredientes[i]]-=1;
+        
+    }
+    sem_post(armazem->acesso)
 }
