@@ -173,9 +173,16 @@ int main(){
 
 
 //todo
-    int camarao[1]={1};
-    int sushi[2]={0,2};//arroz=0,camarao=1,peixe=2
-    int* receitas[2]={camarao,sushi};
+    Receita camarao;
+    Receita sushi;
+    Receita peixe_frito;
+    int camarao_etapas[1]={1};
+    int sushi_etapas[2]={0,2};//cozinhar arroz=0,preparar camarao=1,cortar peixe=2, preparar peixe frito=3
+    int peixe_frito_etapas[1]={3};
+    camarao.etapas=camarao_etapas;
+    sushi.etapas=sushi_etapas;
+    peixe_frito.etapas=peixo_frito_etapas;
+    camarao.n=1;
 
 //todo
 
@@ -281,6 +288,10 @@ int main(){
     }
     working = 0;
     /* dar sempos aqui nos pedidos)*/
+    for(int i = 0; i < N_COZINHEIROS; i++)
+    {
+        sem_pos(tarefas.possui_tarefas);
+    }
     /* acaba logica main */
     for(int i = 0; i < N_COZINHEIROS; i++)
     {
