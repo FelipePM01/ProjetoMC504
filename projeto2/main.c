@@ -198,12 +198,16 @@ int main(){
     camarao.n=1;
     peixe_frito.n=1;
     sushi.n=2;
+    Receita* receitas[3]={&camarao,&sushi,&peixe_frito};
 
 //todo
-
+    
+    scanf()
     int n_pedidos;
+    printf("Insira o numero de pedidos:\n");
     scanf("%d", &n_pedidos);
     int* pedidos_entrada = malloc(n_pedidos*sizeof(int));
+    printf("Insira os pedidos (0 para camarao, 1 para sushi e 2 para peixe frito):\n");
     for (int i = 0; i < n_pedidos; i++)
     {
         int pedido;
