@@ -60,16 +60,19 @@ typedef struct {
 void cozinhar(){
     printf("Cozinhando...");
     usleep(2000);
+    printf("...e terminou de cozinhar.")
 }
 
 void cortar(){
     printf("Cortando...");
     usleep(2000);
+    printf("...e terminou de cortar");
 }
 
 void preparar_peixe_frito(){
-    printf("Preparando Peixe Frito...");
+    printf("Preparando peixe frito...");
     usleep(2000);
+    printf("...e terminou de preparar o peixe frito.");
 }
 
 void entregar(Armazem* armazem,int resultado,sem_t* checagem){//
