@@ -145,31 +145,34 @@ void f_cozinheiro(void * args){ //working=variavel q guarda se acabou o programa
         if(tarefa_atual==0){//cozinhar arroz
             pegar_ingrediente(armazem,tarefa_atual);
             sem_wait(panelas);
-            cozinhar_arroz();
+            cozinhar_arroz(id);
             sem_pos(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
         else if(tarefa_atual==1){//preparar camarao
             pegar_ingrediente(armazem,tarefa_atual);
             sem_wait(facas);
-            cortar();
+            cortar_camarao(id);
             sem_pos(facas);
             sem_wait(panelas);
-            cozinhar_camarao();
+            cozinhar_camarao(id);
             sem_pos(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
         else if(tarefa_atual==2){//cortar peixe
             pegar_ingrediente(armazem,tarefa_atual);
             sem_wait(facas);
-            cortar();
+            cortar_peixe(id);
             sem_pos(facas);
             entregar(armazem,tarefa_atual,checagem);
         }
         else if(tarefa_atual==3){//fritar peixe
             pegar_ingrediente(armazem,tarefa_atual);
+            sem_wait(facas);
+            cortar_peixe(id);
+            sem_pos(facas);
             sem_wait(panelas);
-            fritar();
+            fritar(id);
             sem_pos(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
