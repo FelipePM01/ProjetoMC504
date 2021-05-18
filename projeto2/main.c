@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #define N_COZINHEIROS 2
 #define N_FACAS 1
@@ -90,16 +91,16 @@ void fritar(int id){
 
 void entregar(Armazem* armazem,int resultado,sem_t* checagem){//
     sem_wait(armazem->acesso);
-    (armazem->pronto)[resultado]++;
-    sem_pos(armazem->acesso);
-    sem_pos(checagem);
+    (armazem->prontos)[resultado]++;
+    sem_post(armazem->acesso);
+    sem_post(checagem);
 }
 
 void pegar_ingrediente(Armazem* armazem,int ingrediente){//
     sem_wait(armazem->acesso);
     (armazem->ingredientes)[ingrediente]--;
-    (armazem->reservado)[ingrediente]--;
-    sem_pos(armazem->acesso);
+    (armazem->reservados)[ingrediente]--;
+    sem_post(armazem->acesso);
 }
 
 void pegar_receita_pronta(Armazem* armazem, Receita* receita){
@@ -107,7 +108,7 @@ void pegar_receita_pronta(Armazem* armazem, Receita* receita){
     for(int i=0;i<receita->n;i++){
         armazem->prontos[receita->etapas[i]]-=1;
     }
-    sem_post(armazem->acesso)
+    sem_post(armazem->acesso);
 }
 
 bool tem_receita_pronta(Armazem* armazem, Receita* receita){
@@ -117,11 +118,11 @@ bool tem_receita_pronta(Armazem* armazem, Receita* receita){
         if(armazem->prontos[receita->etapas[i]]<=0)
             tem=0;
     }
-    sem_post(armazem->acesso)
+    sem_post(armazem->acesso);
     return tem;
 }
 
-void f_cozinheiro(void * args){ //working=variavel q guarda se acabou o programa ou nao
+void f_cozinheiro(Args * args){ //working=variavel q guarda se acabou o programa ou nao
     int* working = (Args*) args->working;
     sem_t* panelas = (Args*) args->panelas;
     sem_t* facas =  (Args*) args->facas;
@@ -140,44 +141,62 @@ void f_cozinheiro(void * args){ //working=variavel q guarda se acabou o programa
             tarefas->primeira=nova_tarefa->prox;
         tarefas->primeira=nova_tarefa->prox;
         free(nova_tarefa);
-        sem_post(tarefa->acesso);
+        sem_postt(tarefa->acesso);
 
         if(tarefa_atual==0){//cozinhar arroz
             pegar_ingrediente(armazem,tarefa_atual);
             sem_wait(panelas);
             cozinhar_arroz(id);
-            sem_pos(panelas);
+            sem_post(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
         else if(tarefa_atual==1){//preparar camarao
             pegar_ingrediente(armazem,tarefa_atual);
             sem_wait(facas);
             cortar_camarao(id);
-            sem_pos(facas);
+            sem_post(facas);
             sem_wait(panelas);
             cozinhar_camarao(id);
-            sem_pos(panelas);
+            sem_post(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
         else if(tarefa_atual==2){//cortar peixe
             pegar_ingrediente(armazem,tarefa_atual);
             sem_wait(facas);
             cortar_peixe(id);
-            sem_pos(facas);
+            sem_post(facas);
             entregar(armazem,tarefa_atual,checagem);
         }
         else if(tarefa_atual==3){//fritar peixe
             pegar_ingrediente(armazem,tarefa_atual);
             sem_wait(facas);
             cortar_peixe(id);
-            sem_pos(facas);
+            sem_post(facas);
             sem_wait(panelas);
             fritar(id);
-            sem_pos(panelas);
+            sem_post(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
         sem_wait(tarefas->possui_tarefas);
     }
+}
+int checar_ingrediente(Armazem* armazem,int* ingredientes,int n){
+    int tem=1;
+    sem_wait(armazem->acesso);
+    for(int i=0;i<n;i++){
+        if(armazem->ingredientes[ingredientes[i]]-armazem->reservados[*ingredientes[i]]<=0)
+            tem=0;
+    }
+    sem_postt(armazem->acesso)
+    return tem;
+}
+
+void reservar_ingredientes(Armazem* armazem,int* ingredientes,int n){
+    sem_wait(armazem->acesso);
+    for(int i=0;i<n;i++){
+        armazem->reservados[ingredientes[i]]+=1;
+    }
+    sem_postt(armazem->acesso)
 }
 int adicionar_pedidos(Receita* receita,Armazem* armazem,GrupoTarefas* tarefa, GrupoPedidos* pedidos_aceitos){
 
@@ -206,9 +225,9 @@ int adicionar_pedidos(Receita* receita,Armazem* armazem,GrupoTarefas* tarefa, Gr
     int checador=checar_ingrediente(armazem,vet_ingred,n);
     if(checador){
         for(int i=0;i<n-1;i++){
-            vetor[i]->proximo=vetor[i+1];
+            vetor[i]->prox=vetor[i+1];
         }
-        vetor[n-1]->proximo=NULL;
+        vetor[n-1]->prox=NULL;
 
         reservar_ingrediente(armazem,vet_ingred,n);
 
@@ -240,24 +259,7 @@ int adicionar_pedidos(Receita* receita,Armazem* armazem,GrupoTarefas* tarefa, Gr
 
 }
 
-int checar_ingrediente(Armazem* armazem,int* ingredientes,int n){
-    int tem=1;
-    sem_wait(armazem->acesso);
-    for(int i=0;i<n;i++){
-        if(armazem->ingredientes[ingredientes[i]]-armazem->reservados[*ingredientes[i]]<=0)
-            tem=0;
-    }
-    sem_post(armazem->acesso)
-    return tem;
-}
 
-void reservar_ingredientes(Armazem* armazem,int* ingredientes,int n){
-    sem_wait(armazem->acesso);
-    for(int i=0;i<n;i++){
-        armazem->reservados[ingredientes[i]]+=1;
-    }
-    sem_post(armazem->acesso)
-}
 int main(){
     sem_t panelas;
     sem_t facas;
@@ -366,7 +368,7 @@ int main(){
             pedidos_aceitos.primeira = current->proximo;
             if (pedidos_aceitos.ultima == current)
                 pedidos_aceitos.ultima = NULL;
-            pedidos_aceitos.n -= 1
+            pedidos_aceitos.n -= 1;
             n_completos+=1;
             free(current);
             entregue = true;
@@ -380,7 +382,7 @@ int main(){
                 current->proximo = current->proximo->proximo;
                 if (pedidos_aceitos.ultima = current->proximo)
                     pedidos_aceitos.ultima = current;
-                pedidos_aceitos.n -= 1
+                pedidos_aceitos.n -= 1;
                 n_completos+=1;
                 free(dump);
                 entregue = true;
@@ -410,7 +412,7 @@ int main(){
     /* dar sempos aqui nos pedidos)*/
     for(int i = 0; i < N_COZINHEIROS; i++)
     {
-        sem_pos(tarefas.possui_tarefas);
+        sem_postt(tarefas.possui_tarefas);
     }
     /* acaba logica main */
     for(int i = 0; i < N_COZINHEIROS; i++)
