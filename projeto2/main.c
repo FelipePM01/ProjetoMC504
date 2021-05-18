@@ -183,6 +183,8 @@ int main(){
     sushi.etapas=sushi_etapas;
     peixe_frito.etapas=peixo_frito_etapas;
     camarao.n=1;
+    peixe_frito.n=1;
+    sushi.n=2;
 
 //todo
 
