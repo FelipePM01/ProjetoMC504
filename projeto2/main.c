@@ -55,6 +55,7 @@ typedef struct {
     Armazem* armazem;
     GrupoTarefas* tarefas;
     sem_t* checagem;
+    int id;
 } Args;
 
 void cozinhar(){
@@ -115,6 +116,7 @@ void f_cozinheiro(void * args){ //working=variavel q guarda se acabou o programa
     Armazem* armazem = (Args*) args->armazem;
     GrupoTarefas* tarefas = (Args*) args-> tarefas;
     sem_t* checagem = (Args*) args->checagem;
+    int id= (Args*) args->id;
 
     sem_wait(tarefas->possui_tarefas);
     while(working){
@@ -334,6 +336,7 @@ int main(){
         args[i].armazem = &armazem;
         args[i].tarefas = &tarefas;
         args[i].checagem = &checagem;
+        args[i].id=i;
         pthread_create(&cozinheiros[i], NULL, &f_cozinheiro, &args[i]);
     }
     /* logica main*/
