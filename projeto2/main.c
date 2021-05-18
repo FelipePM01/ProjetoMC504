@@ -12,6 +12,7 @@
 #define N_PEIXE 10
 #define N_INGREDIENTES 3
 #define N_PRONTOS 3
+
 typedef struct armazem{
     int ingredientes[N_INGREDIENTES];
     int prontos[N_PRONTOS];
@@ -30,6 +31,7 @@ typedef struct grupo_tarefas{
     sem_t acesso;
     sem_t possui_tarefas;
 } GrupoTarefas;
+
 typedef struct receita{
     int* etapas;
     int n;
@@ -82,7 +84,6 @@ void pegar_ingrediente(Armazem* armazem,int ingrediente){//
     (armazem->ingredientes)[ingrediente]--;
     (armazem->reservado)[ingrediente]--;
     sem_pos(armazem->acesso);
-
 }
 
 void pegar_receita_pronta(Armazem* armazem, Receita* receita){
@@ -390,7 +391,6 @@ void reservar_ingredientes(Armazem* armazem,int* ingredientes,int n){
     sem_wait(armazem->acesso);
     for(int i=0;i<n;i++){
         armazem->reservados[ingredientes[i]]+=1;
-
     }
     sem_post(armazem->acesso)
 }
