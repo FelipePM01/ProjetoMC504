@@ -12,6 +12,7 @@
 #define N_PEIXE 10
 #define N_INGREDIENTES 3
 #define N_PRONTOS 3
+
 typedef struct armazem{
     int ingredientes[N_INGREDIENTES];
     int prontos[N_PRONTOS];
@@ -30,6 +31,7 @@ typedef struct grupo_tarefas{
     sem_t acesso;
     sem_t possui_tarefas;
 } GrupoTarefas;
+
 typedef struct receita{
     int* etapas;
     int n;
@@ -56,11 +58,20 @@ typedef struct {
 } Args;
 
 void cozinhar(){
+    printf("Cozinhando...");
     usleep(2000);
 }
+
 void cortar(){
+    printf("Cortando...");
     usleep(2000);
 }
+
+void preparar_peixe_frito(){
+    printf("Preparando Peixe Frito...");
+    usleep(2000);
+}
+
 void entregar(Armazem* armazem,int resultado,sem_t* checagem){//
     sem_wait(armazem->acesso);
     (armazem->pronto)[resultado]++;
@@ -73,7 +84,6 @@ void pegar_ingrediente(Armazem* armazem,int ingrediente){//
     (armazem->ingredientes)[ingrediente]--;
     (armazem->reservado)[ingrediente]--;
     sem_pos(armazem->acesso);
-
 }
 
 void pegar_receita_pronta(Armazem* armazem, Receita* receita){
@@ -114,31 +124,34 @@ void f_cozinheiro(void * args){ //working=variavel q guarda se acabou o programa
         sem_post(tarefa->acesso);
 
         if(tarefa_atual==0){//cozinhar arroz
-
             pegar(armazem,tarefa_atual);
             sem_wait(panelas);
-            cortar(tarefa);
+            cozinhar();
             sem_pos(panelas);
             entregar(armazem,tarefa_atual,checagem);
-
         }
-            pegar(armazem,tarefa_atual);
         else if(tarefa_atual==1){//preparar camarao
-            sem_wait(facas);
-            cortar(tarefa_atual);
-            sem_pos(facas);
-            sem_wait(panelas);
-            cozinhar(tarefa);
-            sem_pos(panelas);
-            entregar(armazem,tarefa_atual,checagem);
-
-
-        }
-        else if(tarefa==2){//cortar peixe
             pegar(armazem,tarefa_atual);
             sem_wait(facas);
-            cortar(tarefa_atual);
+            cortar();
             sem_pos(facas);
+            sem_wait(panelas);
+            cozinhar();
+            sem_pos(panelas);
+            entregar(armazem,tarefa_atual,checagem);
+        }
+        else if(tarefa_atual==2){//cortar peixe
+            pegar(armazem,tarefa_atual);
+            sem_wait(facas);
+            cortar();
+            sem_pos(facas);
+            entregar(armazem,tarefa_atual,checagem);
+        }
+        else if(tarefa_atual==3){//preparar peixe frito
+            pegar(armazem,tarefa_atual);
+            sem_wait(panelas);
+            preparar_peixe_frito();
+            sem_pos(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
         sem_wait(tarefas->possui_tarefas);
@@ -380,7 +393,6 @@ void reservar_ingredientes(Armazem* armazem,int* ingredientes,int n){
     sem_wait(armazem->acesso);
     for(int i=0;i<n;i++){
         armazem->reservados[ingredientes[i]]+=1;
-
     }
     sem_post(armazem->acesso)
 }
