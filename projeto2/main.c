@@ -69,10 +69,16 @@ void cozinhar_camarao(int id){
     printf("...e o cozinheiro %d terminou de cozinhar camarão.",id);
 }
 
-void cortar(int id){
-    printf("Cozinheiro %d está cortando...",id);
+void cortar_camarao(int id){
+    printf("Cozinheiro %d está cortando camarão...",id);
     usleep(2000);
-    printf("...e terminou de cortar.",id);
+    printf("...e o cozinheiro %d terminou de cortar camarão.",id);
+}
+
+void cortar_peixe(int id){
+    printf("Cozinheiro %d está cortando peixe...",id);
+    usleep(2000);
+    printf("...e o cozinheiro %d terminou de cortar peixe.",id);
 }
 
 void fritar(int id){
