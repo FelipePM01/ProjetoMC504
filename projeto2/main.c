@@ -58,22 +58,34 @@ typedef struct {
     int id;
 } Args;
 
-void cozinhar(){
-    printf("Cozinhando...");
+void cozinhar_arroz(int id){
+    printf("Cozinheiro %d está cozinhando arroz...",id);
     usleep(2000);
-    printf("...e terminou de cozinhar.");
+    printf("...e o cozinheiro %d terminou de cozinhar arroz.",id);
 }
 
-void cortar(){
-    printf("Cortando...");
+void cozinhar_camarao(int id){
+    printf("Cozinheiro %d está cozinhando camarão...",id);
     usleep(2000);
-    printf("...e terminou de cortar");
+    printf("...e o cozinheiro %d terminou de cozinhar camarão.",id);
 }
 
-void fritar(){
-    printf("Fritando peixe ...");
+void cortar_camarao(int id){
+    printf("Cozinheiro %d está cortando camarão...",id);
     usleep(2000);
-    printf("...e terminou de preparar o peixe frito.");
+    printf("...e o cozinheiro %d terminou de cortar camarão.",id);
+}
+
+void cortar_peixe(int id){
+    printf("Cozinheiro %d está cortando peixe...",id);
+    usleep(2000);
+    printf("...e o cozinheiro %d terminou de cortar peixe.",id);
+}
+
+void fritar(int id){
+    printf("Cozinheiro %d está fritando peixe ...",id);
+    usleep(2000);
+    printf("...e o cozinheiro %d terminou de preparar o peixe frito.",id);
 }
 
 void entregar(Armazem* armazem,int resultado,sem_t* checagem){//
@@ -133,7 +145,7 @@ void f_cozinheiro(void * args){ //working=variavel q guarda se acabou o programa
         if(tarefa_atual==0){//cozinhar arroz
             pegar_ingrediente(armazem,tarefa_atual);
             sem_wait(panelas);
-            cozinhar();
+            cozinhar_arroz();
             sem_pos(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
@@ -143,7 +155,7 @@ void f_cozinheiro(void * args){ //working=variavel q guarda se acabou o programa
             cortar();
             sem_pos(facas);
             sem_wait(panelas);
-            cozinhar();
+            cozinhar_camarao();
             sem_pos(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
@@ -154,10 +166,10 @@ void f_cozinheiro(void * args){ //working=variavel q guarda se acabou o programa
             sem_pos(facas);
             entregar(armazem,tarefa_atual,checagem);
         }
-        else if(tarefa_atual==3){//preparar peixe frito
+        else if(tarefa_atual==3){//fritar peixe
             pegar_ingrediente(armazem,tarefa_atual);
             sem_wait(panelas);
-            preparar_peixe_frito();
+            fritar();
             sem_pos(panelas);
             entregar(armazem,tarefa_atual,checagem);
         }
