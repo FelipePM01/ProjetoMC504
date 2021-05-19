@@ -257,7 +257,7 @@ void cozinhar_arroz(int id, DadosVisuais* dados_visuais){
     dados_visuais->status_cozinheiros[id] = 4;
     show_data(dados_visuais);
     sem_post(show);
-    sleep_ms(2000);
+    sleep_ms(4000);
     sem_wait(show);
     dados_visuais->status_cozinheiros[id] = 0;
     show_data(dados_visuais);
@@ -269,7 +269,7 @@ void cozinhar_camarao(int id, DadosVisuais* dados_visuais){
     dados_visuais->status_cozinheiros[id] = 4;
     show_data(dados_visuais);
     sem_post(show);
-    sleep_ms(2000);
+    sleep_ms(1000);
     sem_wait(show);
     dados_visuais->status_cozinheiros[id] = 0;
     show_data(dados_visuais);
@@ -281,7 +281,7 @@ void cortar_camarao(int id, DadosVisuais* dados_visuais){
     dados_visuais->status_cozinheiros[id] = 2;
     show_data(dados_visuais);
     sem_post(show);
-    sleep_ms(2000);
+    sleep_ms(3000);
     sem_wait(show);
     dados_visuais->status_cozinheiros[id] = 0;
     show_data(dados_visuais);
