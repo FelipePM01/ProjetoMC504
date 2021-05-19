@@ -8,15 +8,15 @@ Projeto 2 para a disciplina MC504 da Unicamp
 +                                           _____________________+
 +   ___________                           |Arroz:x            xx +
 +  |    ____   |                          |Camarao:           xx +
-+  |   |    |_ |   0      0               |Peixe:             xx +
++  |   |    |_ |   o      o               |Peixe:             xx +
 +  |   |    |_|| /|1|\  /|0|\             |______________________+
 +  |   |____|  |  |_|    |_|              |Arroz cozido:      xx +
 +  |     /\    |  / \    / \              |Peixe cortado:     xx +
 +  |___________|                          |Camarao preparado: xx +
 +   ___________                           |Peixe frito:       xx +
 +  |    ____   |                          |______________________+
-+  |   |    |  |   0      0                                      +
-+  |   |    |  | /|1|\  /|0|\                   0       0        +
++  |   |    |  |   o      o                                      +
++  |   |    |  | /|1|\  /|0|\                   o       o        +
 +  |   |____|  |  |_|    |_|                  /|1|\   /|0|\      +
 +  |    ____   |  / \    / \                   |_|     |_|       +
 +  |___________|                               / \     / \       +
@@ -42,3 +42,16 @@ Pedido1 - 2,7
 Pedido2 - 2,30
 Pedido3 - 2,54
 
+CozinheirosPanela:
+cozinhando - 7,19
+esperando - 7,26
+
+CozinheirosFaca:
+cozinhando - 14,19
+esperando - 14,26
+
+CozinheirosLivres:
+1 - 15,49 
+0 - 15,57
+
+final - 19,65
