@@ -101,7 +101,6 @@ void entregar(Armazem* armazem,int resultado,sem_t* checagem){//
 void pegar_ingrediente(Armazem* armazem,int ingrediente){//
 
     sem_wait(armazem->acesso);
-    (armazem->ingredientes)[ingrediente]--;
     (armazem->reservados)[ingrediente]--;
     sem_post(armazem->acesso);
 }
