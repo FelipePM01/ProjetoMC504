@@ -165,6 +165,7 @@ void* f_cozinheiro(void * args){ //working=variavel q guarda se acabou o program
         else{
             tarefas->primeira=nova_tarefa->prox;
         }
+        free(nova_tarefa);
         sem_post(tarefas->acesso);
 
         if(tarefa_atual==0){//cozinhar arroz
@@ -209,8 +210,10 @@ int checar_ingrediente(Armazem* armazem,int* ingredientes,int n){
     int tem=1;
     sem_wait(armazem->acesso);
     for(int i=0;i<n;i++){
-        if(armazem->ingredientes[ingredientes[i]]-armazem->reservados[ingredientes[i]]<=0)
+        if(armazem->ingredientes[ingredientes[i]]<=0)
+        {
             tem=0;
+        }
     }
     sem_post(armazem->acesso);
     return tem;
@@ -221,6 +224,7 @@ void reservar_ingredientes(Armazem* armazem,int* ingredientes,int n){
     sem_wait(armazem->acesso);
     for(int i=0;i<n;i++){
         armazem->reservados[ingredientes[i]]+=1;
+        armazem->ingredientes[ingredientes[i]]-=1;
     }
     sem_post(armazem->acesso);
 }
@@ -244,7 +248,8 @@ int adicionar_pedidos(Receita* receita,Armazem* armazem,GrupoTarefas* tarefa, Gr
             case 2: //peixe
                 vet_ingred[i] = 2;
                 break;
-            default:
+            case 3:
+                vet_ingred[i] = 2;
                 break;
         }
     }
@@ -282,11 +287,12 @@ int adicionar_pedidos(Receita* receita,Armazem* armazem,GrupoTarefas* tarefa, Gr
         }
     }
     else{
-        for(int i=0;i<n-1;i++){
-            //free(vetor[i]);
+        for(int i=0;i<n;i++){
+            free(vetor[i]);
         }
     }
-    //free(vet_ingred);
+    free(vet_ingred);
+    free(vetor);
     return checador;
 
 }
@@ -411,8 +417,9 @@ int main(){
                 pedidos_aceitos.ultima = NULL;
             pedidos_aceitos.n -= 1;
             n_completos+=1;
-            //free(current);
+            ListaPedidos* dump = current;
             current = current->next;
+            free(dump);
             entregue += 1;
 
         }
@@ -428,7 +435,7 @@ int main(){
                 }
                 pedidos_aceitos.n -= 1;
                 n_completos+=1;
-                //free(dump);
+                free(dump);
                 entregue +=1;
             }
             else
@@ -467,7 +474,15 @@ int main(){
     {
         pthread_join(cozinheiros[i], NULL);
     }
-    //free(pedidos_entrada);
+    free(pedidos_entrada);
+    free(panelas);
+    free(facas);
+    free(checagem);
+    free(armazem->acesso);
+    free(armazem);
+    free(tarefas->acesso);
+    free(tarefas->possui_tarefas);
+    free(tarefas);
     return 0;
 
 }
