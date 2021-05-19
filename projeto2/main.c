@@ -91,46 +91,28 @@ void fritar(int id){
 }
 
 void entregar(Armazem* armazem,int resultado,sem_t* checagem){//
-    printf("tentando entregar etapa ");
-    int a;
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
+
     sem_wait(armazem->acesso);
-    printf("conseguiu acesso entregar etapa\n");
     (armazem->prontos)[resultado]++;
     sem_post(armazem->acesso);
-    printf("terminou entregar etapa ");
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
     sem_post(checagem);
 }
 
 void pegar_ingrediente(Armazem* armazem,int ingrediente){//
-    printf("tentando pegar ingredientes ");
-    int a;
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
+
     sem_wait(armazem->acesso);
-    printf("conseguiu acesso pegar ingredientes\n");
     (armazem->ingredientes)[ingrediente]--;
     (armazem->reservados)[ingrediente]--;
     sem_post(armazem->acesso);
-    printf("terminou pegar ingredientes ");
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
 }
 
 void pegar_receita_pronta(Armazem* armazem, Receita* receita){
-    printf("tentando pegar receita pronta ");
-    int a;
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
+
     sem_wait(armazem->acesso);
-    printf("conseguiu acesso pegar receita\n");
     for(int i=0;i<receita->n;i++){
         armazem->prontos[receita->etapas[i]]-=1;
     }
-    printf(".............................Prato entregue: ");
+    printf("Prato entregue: ");
     if (receita->id == 0){
         printf("Camarão.\n");
     }
@@ -144,28 +126,17 @@ void pegar_receita_pronta(Armazem* armazem, Receita* receita){
         printf("nao deveria acontecer\n");
     }
     sem_post(armazem->acesso);
-    printf("terminou pegar receita pronta ");
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
 }
 
 bool tem_receita_pronta(Armazem* armazem, Receita* receita){
     int tem=1;
-    printf("tentando checar receita pronta ");
-    int a;
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
+
     sem_wait(armazem->acesso);
-    printf("conseguiu acesso checar receita\n");
-    printf("loop!\n");
     for(int i=0;i<receita->n;i++){
         if(armazem->prontos[receita->etapas[i]]<=0)
             tem=0;
     }
     sem_post(armazem->acesso);
-    printf("terminou checar receita pronta ");
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
     return tem;
 }
 
@@ -180,7 +151,6 @@ void* f_cozinheiro(void * args){ //working=variavel q guarda se acabou o program
     sem_t* checagem = argumentos.checagem;
     int id= argumentos.id;
 
-    //printf("Cozinheiro at %d\n", (int)&argumentos.working);
 
     sem_wait(tarefas->possui_tarefas);
     while(*working){
@@ -198,38 +168,38 @@ void* f_cozinheiro(void * args){ //working=variavel q guarda se acabou o program
         sem_post(tarefas->acesso);
 
         if(tarefa_atual==0){//cozinhar arroz
-            pegar_ingrediente(armazem,tarefa_atual);
+            pegar_ingrediente(armazem,0);
             sem_wait(panelas);
             cozinhar_arroz(id);
             sem_post(panelas);
-            entregar(armazem,tarefa_atual,checagem);
+            entregar(armazem,0,checagem);
         }
         else if(tarefa_atual==1){//preparar camarao
-            pegar_ingrediente(armazem,tarefa_atual);
+            pegar_ingrediente(armazem,1);
             sem_wait(facas);
             cortar_camarao(id);
             sem_post(facas);
             sem_wait(panelas);
             cozinhar_camarao(id);
             sem_post(panelas);
-            entregar(armazem,tarefa_atual,checagem);
+            entregar(armazem,1,checagem);
         }
         else if(tarefa_atual==2){//cortar peixe
-            pegar_ingrediente(armazem,tarefa_atual);
+            pegar_ingrediente(armazem,2);
             sem_wait(facas);
             cortar_peixe(id);
             sem_post(facas);
-            entregar(armazem,tarefa_atual,checagem);
+            entregar(armazem,2,checagem);
         }
         else if(tarefa_atual==3){//fritar peixe
-            pegar_ingrediente(armazem,tarefa_atual);
+            pegar_ingrediente(armazem,2);
             sem_wait(facas);
             cortar_peixe(id);
             sem_post(facas);
             sem_wait(panelas);
             fritar(id);
             sem_post(panelas);
-            entregar(armazem,tarefa_atual,checagem);
+            entregar(armazem,3,checagem);
         }
         sem_wait(tarefas->possui_tarefas);
     }
@@ -237,37 +207,22 @@ void* f_cozinheiro(void * args){ //working=variavel q guarda se acabou o program
 }
 int checar_ingrediente(Armazem* armazem,int* ingredientes,int n){
     int tem=1;
-    printf("tentando checar ingredientes ");
-    int a;
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
     sem_wait(armazem->acesso);
-    printf("conseguiu acesso checar ingredientes\n");
     for(int i=0;i<n;i++){
         if(armazem->ingredientes[ingredientes[i]]-armazem->reservados[ingredientes[i]]<=0)
             tem=0;
     }
     sem_post(armazem->acesso);
-    printf("terminou de checar ingredientes ");
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
     return tem;
 }
 
 void reservar_ingredientes(Armazem* armazem,int* ingredientes,int n){
-    printf("tentando reservar ingredientes ");
-    int a;
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
+
     sem_wait(armazem->acesso);
-    printf("conseguiu acesso reservar ingredientes\n");
     for(int i=0;i<n;i++){
         armazem->reservados[ingredientes[i]]+=1;
     }
     sem_post(armazem->acesso);
-    printf("terminou reservar ingredientes ");
-    sem_getvalue(armazem->acesso, &a);
-    printf("%d\n",a);
 }
 int adicionar_pedidos(Receita* receita,Armazem* armazem,GrupoTarefas* tarefa, GrupoPedidos* pedidos_aceitos){
 
@@ -443,31 +398,14 @@ int main(){
     /* logica main*/
     while(n_aceitos + n_recusados < n_pedidos || n_completos < n_aceitos)
     {
-        printf("Esperando receber...\n");
-        for (int k = 0; k <N_PRONTOS; k++)
-        {
-            printf("%d ", armazem->prontos[k]);
-        }
-        printf("\n");
+        printf("Esperando receber ingredientes prontos...\n");
         sem_wait(checagem);
-        printf("Recebeu\n");
-        for (int k = 0; k <N_PRONTOS; k++)
-        {
-            printf("%d ", armazem->prontos[k]);
-        }
-        printf("\n");
+        printf("Recebeu ingrediente pronto\n");
         ListaPedidos* current = pedidos_aceitos.primeira;
         int entregue = 0;
         while (current != NULL && tem_receita_pronta(armazem, current->receita))
         {
-            printf("oi receita id:%d\n",current->receita->id);
-            for (int k = 0; k <N_PRONTOS; k++)
-            {
-                printf("%d ", armazem->prontos[k]);
-            }
-            printf("\n");
             pegar_receita_pronta(armazem, current->receita);
-            printf("pegou a\n");
             pedidos_aceitos.primeira = current->next;
             if (pedidos_aceitos.ultima == current)
                 pedidos_aceitos.ultima = NULL;
@@ -476,26 +414,13 @@ int main(){
             //free(current);
             current = current->next;
             entregue += 1;
-            for (int k = 0; k <N_PRONTOS; k++)
-            {
-                printf("%d ", armazem->prontos[k]);
-            }
-            printf("\n");
 
         }
         while (current != NULL && current->next != NULL)
         {
             if (tem_receita_pronta(armazem, current->next->receita))
             {
-                printf("oi receita id:%d\n",current->next->receita->id);
-                for (int k = 0; k <N_PRONTOS; k++)
-                {
-                    printf("%d ", armazem->prontos[k]);
-                }
-                printf("\n");
-
                 pegar_receita_pronta(armazem, current->next->receita);
-                printf("pegou b\n");
                 ListaPedidos* dump = current->next;
                 current->next = current->next->next;
                 if (current->next == NULL){
@@ -505,11 +430,6 @@ int main(){
                 n_completos+=1;
                 //free(dump);
                 entregue +=1;
-                for (int k = 0; k <N_PRONTOS; k++)
-                {
-                    printf("%d ", armazem->prontos[k]);
-                }
-                printf("\n");
             }
             else
             {
@@ -535,7 +455,7 @@ int main(){
         }
 
     }
-    printf("saiu main\n");
+    printf("Todos os pedidos aceitos foram entregues.\n");
     working = 0;
     /* dar sempos aqui nos pedidos)*/
     for(int i = 0; i < N_COZINHEIROS; i++)
@@ -548,11 +468,6 @@ int main(){
         pthread_join(cozinheiros[i], NULL);
     }
     //free(pedidos_entrada);
-    for (int k = 0; k <N_PRONTOS; k++)
-    {
-        printf("%d ", armazem->prontos[k]);
-    }
-    printf("\n");
     return 0;
 
 }
