@@ -14,6 +14,27 @@
 #define N_INGREDIENTES 3
 #define N_PRONTOS 4
 
+#ifdef _WIN32
+#include <conio.h>
+#else
+#include <stdio.h>
+#define clrscr() printf("\e[1;1H\e[2J")
+#endif
+
+void sleep_ms(int milliseconds)
+{
+    #ifdef WIN32
+        Sleep(milliseconds);
+    #elif _POSIX_C_SOURCE >= 199309L
+        struct timespec ts;
+        ts.tv_sec = milliseconds / 1000;
+        ts.tv_nsec = (milliseconds % 1000) * 1000000;
+        nanosleep(&ts, NULL);
+    #else
+        sleep_ms(milliseconds * 1000);
+    #endif
+}
+
 sem_t* show;
 
 typedef struct armazem{
@@ -49,8 +70,17 @@ typedef struct lista_pedidos{
 typedef struct{
     ListaPedidos* primeira;
     ListaPedidos* ultima;
+    sem_t* acesso;
     int n;
 } GrupoPedidos;
+
+typedef struct DadosVisuais{
+    Armazem* armazem;
+    GrupoPedidos* pedidos;
+    int entregues[99];
+    int index;
+    int status_cozinheiros[N_COZINHEIROS]; // 0 nada, 1 esperando faca, 2 usando faca, 3 esperando fogão, 4 usando fogão
+} DadosVisuais;
 
 typedef struct {
     int* working;
@@ -58,47 +88,227 @@ typedef struct {
     sem_t* facas;
     Armazem* armazem;
     GrupoTarefas* tarefas;
+    DadosVisuais* dados_visuais;
     sem_t* checagem;
     int id;
 } Args;
 
-void cozinhar_arroz(int id){
-    sem_wait(show); printf("Cozinheiro %d está cozinhando arroz...\n",id);
+void show_data(DadosVisuais* data)
+{
+    clrscr();
+    char mainstring[15][70] = {
+        "+   ___________                           |Arroz:             xx +\n\0",
+        "+  |    ____   |                          |Camarao:           xx +\n\0",
+        "+  |   |    |_ |                          |Peixe:             xx +\n\0",
+        "+  |   |    |_||                          |______________________+\n\0",
+        "+  |   |____|  |                          |Arroz cozido:      xx +\n\0",
+        "+  |     /\\    |                          |Peixe cortado:     xx +\n\0",
+        "+  |___________|                          |Camarao preparado: xx +\n\0",
+        "+   ___________                           |Peixe frito:       xx +\n\0",
+        "+  |    ____   |                          |______________________+\n\0",
+        "+  |   |    |  |                                                 +\n\0",
+        "+  |   |    |  |                                                 +\n\0",
+        "+  |   |____|  |                                                 +\n\0",
+        "+  |    ____   |                                                 +\n\0",
+        "+  |___________|                                                 +\n\0",
+        "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n\0"
+    };
+
+    printf("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n");
+    printf("+|                    |                    |                    |+\n");
+    int vet_pedidos[3] = {-1,-1,-1};
+    sem_wait(data->pedidos->acesso);
+    ListaPedidos* current_pedido = data->pedidos->primeira;
+    int i = 0;
+    while(i<3 && current_pedido != NULL)
+    {
+        vet_pedidos[i] = current_pedido->receita->id;
+        i++;
+        current_pedido = current_pedido->next;
+    }
+    sem_post(data->pedidos->acesso);
+    printf("+");
+    for (i = 0; i < 3; i++)
+    {
+        switch (vet_pedidos[i]) {
+            case 0:
+                printf("|       camarao      ");
+                break;
+            case 1:
+                printf("|        sushi       ");
+                break;
+            case 2:
+                printf("|     peixe frito    ");
+                break;
+            default:
+                printf("|                    ");
+
+        }
+    }
+    printf("|+\n");
+    printf("+|____________________|____________________|____________________|+\n");
+    printf("+                                           _____________________+\n");
+
+    int ingr[N_INGREDIENTES];
+    int pronto[N_PRONTOS];
+    sem_wait(data->armazem->acesso);
+    for (i = 0; i < N_INGREDIENTES; i++)
+    {
+        ingr[i] = data->armazem->ingredientes[i]+data->armazem->reservados[i];
+    }
+    for(i = 0; i < N_PRONTOS; i++)
+    {
+        pronto[i] = data->armazem->prontos[i];
+    }
+    sem_post(data->armazem->acesso);
+    mainstring[0][62] = '0'+(ingr[0]/10);
+    mainstring[0][63] = '0'+(ingr[0]%10);
+    mainstring[1][62] = '0'+(ingr[1]/10);
+    mainstring[1][63] = '0'+(ingr[1]%10);
+    mainstring[2][62] = '0'+(ingr[2]/10);
+    mainstring[2][63] = '0'+(ingr[2]%10);
+    mainstring[4][62] = '0'+(pronto[0]/10);
+    mainstring[4][63] = '0'+(pronto[0]%10);
+    mainstring[5][62] = '0'+(pronto[1]/10);
+    mainstring[5][63] = '0'+(pronto[1]%10);
+    mainstring[6][62] = '0'+(pronto[2]/10);
+    mainstring[6][63] = '0'+(pronto[2]%10);
+    mainstring[7][62] = '0'+(pronto[3]/10);
+    mainstring[7][63] = '0'+(pronto[3]%10);
+
+    if (data->status_cozinheiros[0] == 2 || data->status_cozinheiros[1] == 2)
+    {
+        mainstring[12][8] = ' ';
+        mainstring[12][9] = ' ';
+        mainstring[12][10] = ' ';
+        mainstring[12][11] = ' ';
+    }
+    if (data->status_cozinheiros[0] != 4 && data->status_cozinheiros[1] != 4)
+    {
+        mainstring[5][8] = ' ';
+        mainstring[5][9] = ' ';
+        mainstring[5][10] = ' ';
+    }
+    int x, y, id = 0;
+    for (id = 0; id < 2; id ++)
+    {
+        if (data->status_cozinheiros[id] == 0)
+        {
+            y = 10;
+            x = 49 + 8*id;
+        }
+        else if (data->status_cozinheiros[id] == 1)
+        {
+            y = 9;
+            x = 26;
+        }
+        else if (data->status_cozinheiros[id] == 2)
+        {
+            y = 9;
+            x = 19;
+        }
+        else if (data->status_cozinheiros[id] == 3)
+        {
+            y = 2;
+            x = 26;
+        }
+        else if (data->status_cozinheiros[id] == 4)
+        {
+            y = 2;
+            x = 19;
+        }
+        mainstring[y][x+2] = 'o';
+        mainstring[y+1][x] = '/';
+        mainstring[y+1][x+1] = '|';
+        mainstring[y+1][x+2] = '0'+id;
+        mainstring[y+1][x+3] = '|';
+        mainstring[y+1][x+4] = '\\';
+        mainstring[y+2][x+1] = '|';
+        mainstring[y+2][x+2] = '_';
+        mainstring[y+2][x+3] = '|';
+        mainstring[y+3][x+1] = '/';
+        mainstring[y+3][x+3] = '\\';
+        // tabela ja foi
+    }
+    for (i = 0; i <15; i++)
+    {
+        printf(mainstring[i]);
+    }
+    printf("Pratos entregues:\n");
+    for(i = 0; i < data->index; i++)
+    {
+        if (data->entregues[i] == 0){
+            printf("Camarão.\n");
+        }
+        else if (data->entregues[i] == 1){
+            printf("Sushi.\n");
+        }
+        else if (data->entregues[i] == 2){
+            printf("Peixe Frito.\n");
+        }
+        else{
+            printf("Todos os pedidos aceitos foram entregues.\n");
+        }
+    }
+}
+
+void cozinhar_arroz(int id, DadosVisuais* dados_visuais){
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 4;
+    show_data(dados_visuais);
     sem_post(show);
-    usleep(2000);
-    sem_wait(show); printf("...e o cozinheiro %d terminou de cozinhar arroz.\n",id);
+    sleep_ms(2000);
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 0;
+    show_data(dados_visuais);
     sem_post(show);
 }
 
-void cozinhar_camarao(int id){
-    sem_wait(show); printf("Cozinheiro %d está cozinhando camarão...\n",id);
+void cozinhar_camarao(int id, DadosVisuais* dados_visuais){
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 4;
+    show_data(dados_visuais);
     sem_post(show);
-    usleep(2000);
-    sem_wait(show); printf("...e o cozinheiro %d terminou de cozinhar camarão.\n",id);
-    sem_post(show);
-}
-
-void cortar_camarao(int id){
-    sem_wait(show); printf("Cozinheiro %d está cortando camarão...\n",id);
-    sem_post(show);
-    usleep(2000);
-    sem_wait(show); printf("...e o cozinheiro %d terminou de cortar camarão.\n",id);
+    sleep_ms(2000);
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 0;
+    show_data(dados_visuais);
     sem_post(show);
 }
 
-void cortar_peixe(int id){
-    sem_wait(show); printf("Cozinheiro %d está cortando peixe...\n",id);
+void cortar_camarao(int id, DadosVisuais* dados_visuais){
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 2;
+    show_data(dados_visuais);
     sem_post(show);
-    usleep(2000);
-    sem_wait(show); printf("...e o cozinheiro %d terminou de cortar peixe.\n",id);
+    sleep_ms(2000);
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 0;
+    show_data(dados_visuais);
     sem_post(show);
 }
 
-void fritar(int id){
-    sem_wait(show); printf("Cozinheiro %d está fritando peixe ...\n",id);
+void cortar_peixe(int id, DadosVisuais* dados_visuais){
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 2;
+    show_data(dados_visuais);
     sem_post(show);
-    usleep(2000);
-    sem_wait(show); printf("...e o cozinheiro %d terminou de preparar o peixe frito.\n",id);
+    sleep_ms(2000);
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 0;
+    show_data(dados_visuais);
+    sem_post(show);
+}
+
+void fritar(int id, DadosVisuais* dados_visuais){
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 4;
+    show_data(dados_visuais);
+    sem_post(show);
+    sleep_ms(2000);
+    sem_wait(show);
+    dados_visuais->status_cozinheiros[id] = 0;
+    show_data(dados_visuais);
     sem_post(show);
 }
 
@@ -123,21 +333,6 @@ void pegar_receita_pronta(Armazem* armazem, Receita* receita){
     for(int i=0;i<receita->n;i++){
         armazem->prontos[receita->etapas[i]]-=1;
     }
-    sem_wait(show); printf("Prato entregue: ");
-
-    if (receita->id == 0){
-        printf("Camarão.\n");
-    }
-    else if (receita->id == 1){
-        printf("Sushi.\n");
-    }
-    else if (receita->id == 2){
-        printf("Peixe Frito.\n");
-    }
-    else{
-        printf("nao deveria acontecer\n");
-    }
-    sem_post(show);
     sem_post(armazem->acesso);
 }
 
@@ -161,6 +356,7 @@ void* f_cozinheiro(void * args){ //working=variavel q guarda se acabou o program
     sem_t* facas =  argumentos.facas;
     Armazem* armazem = argumentos.armazem;
     GrupoTarefas* tarefas = argumentos.tarefas;
+    DadosVisuais* dados_visuais = argumentos.dados_visuais;
     sem_t* checagem = argumentos.checagem;
     int id= argumentos.id;
 
@@ -182,36 +378,76 @@ void* f_cozinheiro(void * args){ //working=variavel q guarda se acabou o program
         sem_post(tarefas->acesso);
 
         if(tarefa_atual==0){//cozinhar arroz
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 0;
+            show_data(dados_visuais);
+            sem_post(show);
             pegar_ingrediente(armazem,0);
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 3;
+            show_data(dados_visuais);
+            sem_post(show);
             sem_wait(panelas);
-            cozinhar_arroz(id);
+            cozinhar_arroz(id, dados_visuais);
             sem_post(panelas);
             entregar(armazem,0,checagem);
         }
         else if(tarefa_atual==1){//preparar camarao
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 0;
+            show_data(dados_visuais);
+            sem_post(show);
             pegar_ingrediente(armazem,1);
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 1;
+            show_data(dados_visuais);
+            sem_post(show);
             sem_wait(facas);
-            cortar_camarao(id);
+            cortar_camarao(id, dados_visuais);
             sem_post(facas);
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 3;
+            show_data(dados_visuais);
+            sem_post(show);
             sem_wait(panelas);
-            cozinhar_camarao(id);
+            cozinhar_camarao(id, dados_visuais);
             sem_post(panelas);
             entregar(armazem,1,checagem);
         }
         else if(tarefa_atual==2){//cortar peixe
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 0;
+            show_data(dados_visuais);
+            sem_post(show);
             pegar_ingrediente(armazem,2);
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 1;
+            show_data(dados_visuais);
+            sem_post(show);
             sem_wait(facas);
-            cortar_peixe(id);
+            cortar_peixe(id, dados_visuais);
             sem_post(facas);
             entregar(armazem,2,checagem);
         }
         else if(tarefa_atual==3){//fritar peixe
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 0;
+            show_data(dados_visuais);
+            sem_post(show);
             pegar_ingrediente(armazem,2);
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 1;
+            show_data(dados_visuais);
+            sem_post(show);
             sem_wait(facas);
-            cortar_peixe(id);
+            cortar_peixe(id, dados_visuais);
             sem_post(facas);
+            sem_wait(show);
+            dados_visuais->status_cozinheiros[id] = 3;
+            show_data(dados_visuais);
+            sem_post(show);
             sem_wait(panelas);
-            fritar(id);
+            fritar(id, dados_visuais);
             sem_post(panelas);
             entregar(armazem,3,checagem);
         }
@@ -282,6 +518,7 @@ int adicionar_pedidos(Receita* receita,Armazem* armazem,GrupoTarefas* tarefa, Gr
             tarefa->ultima->prox = vetor[0];
         }
         tarefa->ultima=vetor[n-1];
+        sem_wait(pedidos_aceitos->acesso);
         if (pedidos_aceitos->primeira == NULL){
             pedidos_aceitos->primeira = (ListaPedidos*)malloc(sizeof(ListaPedidos));
             pedidos_aceitos->primeira->receita = receita;
@@ -294,6 +531,7 @@ int adicionar_pedidos(Receita* receita,Armazem* armazem,GrupoTarefas* tarefa, Gr
             pedidos_aceitos->ultima = pedidos_aceitos->ultima->next;
             pedidos_aceitos->ultima->next = NULL;
         }
+        sem_post(pedidos_aceitos->acesso);
         for (int i = 0; i < n; i++)
         {
             sem_post(tarefa->possui_tarefas);
@@ -312,11 +550,23 @@ int adicionar_pedidos(Receita* receita,Armazem* armazem,GrupoTarefas* tarefa, Gr
 
 
 int main(){
+
+    DadosVisuais dados_visuais;
+
+    for (int i = 0; i < N_COZINHEIROS; i++)
+    {
+        dados_visuais.status_cozinheiros[i] = 0;
+    }
+
+    dados_visuais.index = 0;
+
     sem_t* panelas = (sem_t*)malloc(sizeof(sem_t));
     sem_t* facas = (sem_t*)malloc(sizeof(sem_t));
     sem_t* checagem = (sem_t*)malloc(sizeof(sem_t));
     show = (sem_t*)malloc(sizeof(sem_t));
     Armazem* armazem = (Armazem*)malloc(sizeof(Armazem));
+
+    dados_visuais.armazem = armazem;
 
     for(int i=0;i<N_INGREDIENTES;i++){
         armazem->ingredientes[i]=10;
@@ -380,6 +630,9 @@ int main(){
     sem_wait(show); printf("Todos os pedidos foram recebidos.\n");
     sem_post(show);
     GrupoPedidos pedidos_aceitos;
+    dados_visuais.pedidos = &pedidos_aceitos;
+    pedidos_aceitos.acesso = (sem_t*)malloc(sizeof(sem_t));
+    sem_init(pedidos_aceitos.acesso,0,1);
     pedidos_aceitos.primeira = NULL;
     pedidos_aceitos.ultima = NULL;
     pedidos_aceitos.n = 0;
@@ -416,17 +669,23 @@ int main(){
         args[i].armazem = armazem;
         args[i].tarefas = tarefas;
         args[i].checagem = checagem;
+        args[i].dados_visuais = &dados_visuais;
         args[i].id=i;
         pthread_create(&cozinheiros[i], NULL, &f_cozinheiro, &args[i]);
     }
     /* logica main*/
+    sem_wait(show);
+    show_data(&dados_visuais);
+    sem_post(show);
+    sleep_ms(2000);
     while(n_aceitos + n_recusados < n_pedidos || n_completos < n_aceitos)
     {
-        sem_wait(show); printf("Esperando receber ingredientes prontos...\n");
-        sem_post(show);
         sem_wait(checagem);
-        sem_wait(show); printf("Recebeu ingrediente pronto\n");
+        sem_wait(show);
+        show_data(&dados_visuais);
         sem_post(show);
+
+        sem_wait(pedidos_aceitos.acesso);
         ListaPedidos* current = pedidos_aceitos.primeira;
         int entregue = 0;
         while (current != NULL && tem_receita_pronta(armazem, current->receita))
@@ -439,6 +698,10 @@ int main(){
             n_completos+=1;
             ListaPedidos* dump = current;
             current = current->next;
+            sem_wait(show);
+            dados_visuais.entregues[dados_visuais.index]=dump->receita->id;
+            dados_visuais.index++;
+            sem_post(show);
             free(dump);
             entregue += 1;
 
@@ -455,6 +718,10 @@ int main(){
                 }
                 pedidos_aceitos.n -= 1;
                 n_completos+=1;
+                sem_wait(show);
+                dados_visuais.entregues[dados_visuais.index]=dump->receita->id;
+                dados_visuais.index++;
+                sem_post(show);
                 free(dump);
                 entregue +=1;
             }
@@ -463,6 +730,7 @@ int main(){
                 current = current->next;
             }
         }
+        sem_post(pedidos_aceitos.acesso);
         if (entregue)
         {
             count = 0;
@@ -480,11 +748,19 @@ int main(){
                 pedido_atual++;
             }
         }
+        sem_wait(show);
+        show_data(&dados_visuais);
+        sem_post(show);
 
     }
-    sem_wait(show); printf("Todos os pedidos aceitos foram entregues.\n");
-    sem_post(show);
+
     working = 0;
+    sem_wait(show);
+    dados_visuais.entregues[dados_visuais.index]=999;
+    dados_visuais.index++;
+    show_data(&dados_visuais);
+    sem_post(show);
+
     /* dar sempos aqui nos pedidos)*/
     for(int i = 0; i < N_COZINHEIROS; i++)
     {
@@ -505,6 +781,7 @@ int main(){
     free(tarefas->possui_tarefas);
     free(tarefas);
     free(show);
+    free(pedidos_aceitos.acesso);
     return 0;
 
 }
