@@ -124,23 +124,20 @@ void pegar_receita_pronta(Armazem* armazem, Receita* receita){
         armazem->prontos[receita->etapas[i]]-=1;
     }
     sem_wait(show); printf("Prato entregue: ");
-    sem_post(show);
+
     if (receita->id == 0){
-        sem_wait(show); printf("Camarão.\n");
-        sem_post(show);
+        printf("Camarão.\n");
     }
     else if (receita->id == 1){
-        sem_wait(show); printf("Sushi.\n");
-        sem_post(show);
+        printf("Sushi.\n");
     }
     else if (receita->id == 2){
-        sem_wait(show); printf("Peixe Frito.\n");
-        sem_post(show);
+        printf("Peixe Frito.\n");
     }
     else{
-        sem_wait(show); printf("nao deveria acontecer\n");
-        sem_post(show);
+        printf("nao deveria acontecer\n");
     }
+    sem_post(show);
     sem_post(armazem->acesso);
 }
 
